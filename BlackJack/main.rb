@@ -31,6 +31,7 @@ class Game
     @desc = CARD_DESC.shuffle.reverse.shuffle
     @dealer = Dealer.new
     @player
+    @bank ||= 0
   end
 
   def start_game
@@ -40,14 +41,14 @@ class Game
     @player = player
     @player.bankroll -= 10
     @dealer.bankroll -= 10
+    @bank += 20
     @player.cards = @desc.shift(2)
     @dealer.cards = @desc.shift(2)
-    @player.points = VALUES[@player.cards[0]] + VALUES[@player.cards[1]]
-    check_ace(@player)
+    count_points(@player)
     check_ace(@dealer)
     puts "#{player_name}'s cards: #{@player.cards} points: #{@player.points}"
     puts "Dealer's cards **"
-    loop do
+    while @player.bankroll > 0 && @dealer.bankroll > 0 do
       options
       move = gets.chomp
       read(move)
@@ -69,24 +70,43 @@ class Game
     end
   end
 
-  def dealer_points
-    @dealer.cards.each { |card| @dealer.points += VALUES[card] }
-    @dealer.points
+  def dealer_logic
+  end
+
+  def count_points(player)
+    player.cards.each { |card| player.points += VALUES[card] }
+    player.points
+    check_ace(player)
   end
 
   def skip_move
     puts "You've passed a move to another player"
   end
 
-  def add_card
-    @card_added = true
-    @player.cards << @desc.shift
-    @player.points += VALUES[@player.cards[2]]
-    puts "Your cards: #{@player.cards} points: #{@player.points}"
+  def add_card(player)
+    player.card_added = true
+    player.cards << @desc.shift
+    player.points += VALUES[player.cards[2]]
+    check_ace(player)
+    puts "Your cards: #{player.cards} points: #{player.points}"
   end
 
   def open_cards
-    puts "dealer's cards: #{@dealer.cards} points: #{dealer_points}"
+    puts "dealer's cards: #{@dealer.cards} points: #{@dealer_points}"
+    if @dealer_points > @player_points && @dealer_points < 22
+      @dealer.bankroll += @bank
+      @bank = 0
+      puts "You've lost this round"
+    elsif @dealer_points == @player_points
+      @dealer.bankroll += @bank/2
+      @player.bankroll += @bank/2
+      @bank = 0
+      puts "That's a draw"
+    elsif @dealer_points < @player_points && @player_points < 22
+      @player.bankroll += @bank
+      @bank = 0
+      puts "You've won!"
+    end
   end
 
   def read(move)
@@ -94,7 +114,7 @@ class Game
     when "0"
       skip_move
     when "1"
-      add_card
+      @player.card_added? ? puts "You can add card only one time" : add_card(@player)
     when "2"
       open_cards
     when "finish"
