@@ -28,7 +28,6 @@ class Game
             "A+" => 11, "A<3" => 11, "A^" => 11, "A<>" => 11}
 
   def initialize
-    @desc = CARD_DESC.shuffle.reverse.shuffle
     @dealer = Dealer.new
     @player
     @bank ||= 0
@@ -39,6 +38,14 @@ class Game
     player_name = gets.chomp
     player = Player.new(player_name)
     @player = player
+    new_round
+  end
+
+  private
+
+  def game_preset
+    @cards_shown = false
+    @desc = CARD_DESC.shuffle.reverse.shuffle
     @player.bankroll -= 10
     @dealer.bankroll -= 10
     @bank += 20
@@ -47,17 +54,30 @@ class Game
     count_points(@player)
     count_points(@dealer)
     check_ace(@dealer)
-    puts "#{player_name}'s cards: #{@player.cards} points: #{@player.points}"
+    puts "Your cards: #{@player.cards} points: #{@player.points}"
     puts "Dealer's cards **"
-    while @player.bankroll > 0 && @dealer.bankroll > 0 do
+  end
+
+  def new_round
+    game_preset
+    loop do
       options
       move = gets.chomp
       read(move)
       dealer_move
+      break if cards_shown?
+    end
+    if @player.bankroll > 0 && @dealer.bankroll > 0
+      @cards_shown = false
+      new_round
+    else 
+      puts "Do you want to play again?"
     end
   end
 
-  private
+  def cards_shown?
+    @cards_shown
+  end
 
   def options
     if @player.card_added?
@@ -73,10 +93,10 @@ class Game
   end
 
   def dealer_move
-    puts "Dealer's move:"
-    if @dealer.points >= 18
+    if @dealer.points >= 18 && !cards_shown?
+      puts "Dealer's move:"
       skip_move
-    elsif @dealer.points < 18 && (@dealer.points < @player.points)
+    elsif @dealer.points < 18 && (@dealer.points < @player.points) && !cards_shown?
       puts "Dealer took a card"
       add_card(@dealer)
     end
@@ -102,6 +122,7 @@ class Game
   end
 
   def open_cards
+    @cards_shown = true
     puts "dealer's cards: #{@dealer.cards} points: #{@dealer.points}"
     if @dealer.points > @player.points && @dealer.points < 22
       @dealer.bankroll += @bank
@@ -117,6 +138,8 @@ class Game
       @bank = 0
       puts "You've won!"
     end
+    @dealer.points = 0
+    @player.points = 0
   end
 
   def read(move)
