@@ -1,15 +1,13 @@
 require_relative './player'
 require_relative './dealer'
-require_relative './acerule'
 require_relative './hand'
 require_relative './game_logic'
 
 class Game
-  include AceRule
-
   def initialize
     @dealer = Dealer.new
     @game_result = GameResult.new
+    @bank = 0
   end
 
   def start_game
@@ -23,23 +21,21 @@ class Game
   private
 
   def hand_settings
-    @hand = Hand.new
     @player.card_added = false
     @dealer.card_added = false
-    @dealer.points = 0
-    @player.points = 0
+    @player.hand.points = 0
+    @dealer.hand.points = 0
     @player.bankroll -= 10
     @dealer.bankroll -= 10
-    @game_result.bank += 20
+    @bank += 20
   end
 
   def game_preset
     hand_settings
-    @hand.deal_cards(@player)
-    @hand.deal_cards(@dealer)
-    @hand.count_points(@player)
-    @hand.count_points(@dealer)
-    puts "Your cards: #{@player.cards} points: #{@player.points}"
+    @deck = Deck.new
+    @player.hand.deal_cards(@deck)
+    @dealer.hand.deal_cards(@deck)
+    puts "Your cards: #{@player.hand.cards} points: #{@player.hand.points}"
     puts "Dealer's cards **"
   end
 
@@ -62,9 +58,9 @@ class Game
       options
       move = gets.chomp
       read(move)
-      @dealer.dealer_move(@player, @hand) if @hand.cards_not_shown?
-      if @hand.cards_shown?
-        @game_result.round_results(@player, @dealer)
+      @dealer.dealer_move(@deck, @player) if @player.hand.cards_not_shown?
+      if @player.hand.cards_shown?
+        round_results
         break
       end
     end
@@ -91,15 +87,38 @@ class Game
     end
   end
 
+  def round_results
+    if @dealer.hand.points == @player.hand.points || (@player.hand.points > 21 && @dealer.hand.points > 21)
+      @dealer.bankroll += @bank / 2
+      @player.bankroll += @bank / 2
+      @bank = 0
+      puts "That's a draw"
+      puts "Money left: #{@player.bankroll}"
+    elsif (@dealer.hand.points > @player.hand.points && @dealer.hand.points < 22) || (@dealer.hand.points < @player.hand.points && @player.hand.points > 21)
+      @dealer.bankroll += @bank
+      @bank = 0
+      puts "You've lost this round"
+      puts "Money left: #{@player.bankroll}"
+    elsif (@dealer.hand.points < @player.hand.points && @player.hand.points < 22) || (@dealer.hand.points > @player.hand.points && @dealer.hand.points > 21)
+      @player.bankroll += @bank
+      @bank = 0
+      puts "You've won!"
+      puts "Money left: #{@player.bankroll}"
+    end
+  end
+
   def read(move)
     case move
     when '0'
-      @hand.skip_move
+      @player.hand.skip_move
     when '1'
-      @player.card_added? ? 'You can add card only one time' : @hand.add_card(@player, @dealer)
+      @player.card_added? ? 'You can add card only one time' : @player.hand.take_card(@deck)
     when '2'
-      @hand.open_cards(@player, @dealer)
-      @game_result.round_results(@player, @dealer)
+      puts "#{@player.name}'s resuts: "
+      @player.hand.open_cards
+      puts "Dealer's resuts: "
+      @dealer.hand.open_cards
+      round_results
     when 'finish'
       abort 'stop_program'
     end

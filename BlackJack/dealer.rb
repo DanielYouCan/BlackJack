@@ -1,15 +1,13 @@
-require_relative './main'
 require_relative './hand'
 
 class Dealer
-  attr_accessor :bankroll, :cards, :points, :card_added
-  attr_reader :name
+  attr_accessor :bankroll, :card_added
+  attr_reader :name, :hand
 
   def initialize
     @name = 'Dealer'
     @bankroll = 100
-    @cards = []
-    @points ||= 0
+    @hand = Hand.new
     @card_added = false
   end
 
@@ -17,14 +15,14 @@ class Dealer
     @card_added
   end
 
-  def dealer_move(player, hand)
-    if (points >= 18 && hand.cards_shown?) || (points >= player.points && points < 22 && points > 15)
+  def dealer_move(deck, player)
+    if (@hand.points >= 18 && @hand.cards_shown?)
       puts "Dealer's move:"
-      hand.skip_move
-    elsif (points < 18) && (points <= player.points) && hand.cards_not_shown? && (player.points < 22)
+      @hand.skip_move
+    elsif (@hand.points < 18) && @hand.cards_not_shown?
       puts 'Dealer took a card'
-      hand.add_card(self, player)
-      hand.open_cards(player, self) if player.cards.size == 3 && cards.size == 3
+      @hand.take_card(deck)
+      @hand.open_cards if @hand.hand_full? == 3 && player.hand.hand_full?
     end
   end
 end

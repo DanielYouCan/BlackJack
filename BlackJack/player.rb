@@ -1,12 +1,13 @@
+require_relative './hand'
+
 class Player
   attr_accessor :bankroll, :cards, :points, :card_added
-  attr_reader :name
+  attr_reader :name, :hand
   
   def initialize(name)
     @name = name
     @bankroll = 100
-    @cards = []
-    @points ||= 0
+    @hand = Hand.new
     @card_added = false
   end
 
