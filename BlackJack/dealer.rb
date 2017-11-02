@@ -8,21 +8,25 @@ class Dealer
     @name = 'Dealer'
     @bankroll = 100
     @hand = Hand.new
-    @card_added = false
   end
 
-  def card_added?
-    @card_added
+  def new_hand
+    @hand = Hand.new
   end
 
   def dealer_move(deck, player)
-    if (@hand.points >= 18 && @hand.cards_shown?)
-      puts "Dealer's move:"
+    puts "Dealer's move:"
+    if @hand.points >= 18
       @hand.skip_move
-    elsif (@hand.points < 18) && @hand.cards_not_shown?
+    elsif @hand.points < 18 && @hand.cards_not_shown?
       puts 'Dealer took a card'
       @hand.take_card(deck)
-      @hand.open_cards if @hand.hand_full? == 3 && player.hand.hand_full?
+      if @hand.hand_full? && player.hand.hand_full?
+        puts "#{player.name}'s resuts: "
+        player.hand.open_cards
+        puts "Dealer's resuts: "
+        @hand.open_cards
+      end
     end
   end
 end

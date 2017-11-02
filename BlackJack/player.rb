@@ -8,10 +8,9 @@ class Player
     @name = name
     @bankroll = 100
     @hand = Hand.new
-    @card_added = false
   end
 
-  def card_added?
-    @card_added
+  def new_hand
+    @hand = Hand.new
   end
 end

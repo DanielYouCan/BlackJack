@@ -2,14 +2,19 @@ require_relative './deck'
 require_relative './cards'
 
 class Hand
-  attr_accessor :cards_shown, :cards, :points
+  attr_accessor :cards_shown, :cards, :points, :card_added
 
   def initialize
     @cards = []
     @points = 0
     @cards_shown = false
+    @card_added = false
   end
 
+  def card_added?
+    @card_added
+  end
+  
   def cards_shown?
     @cards_shown
   end
@@ -25,6 +30,7 @@ class Hand
   end
 
   def take_card(deck)
+    @card_added = true
     @cards << deck.add_card
     count_points(@cards[-1])
   end

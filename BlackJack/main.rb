@@ -21,10 +21,8 @@ class Game
   private
 
   def hand_settings
-    @player.card_added = false
-    @dealer.card_added = false
-    @player.hand.points = 0
-    @dealer.hand.points = 0
+    @player.new_hand
+    @dealer.new_hand
     @player.bankroll -= 10
     @dealer.bankroll -= 10
     @bank += 20
@@ -73,7 +71,7 @@ class Game
   end
 
   def options
-    if @player.card_added?
+    if @player.hand.card_added?
       puts "Choose what you'd like to do:
       0 - skip a move
       2 - open cards
@@ -112,7 +110,7 @@ class Game
     when '0'
       @player.hand.skip_move
     when '1'
-      @player.card_added? ? 'You can add card only one time' : @player.hand.take_card(@deck)
+      @player.hand.card_added? ? 'You can add card only one time' : @player.hand.take_card(@deck)
     when '2'
       puts "#{@player.name}'s resuts: "
       @player.hand.open_cards
