@@ -14,7 +14,7 @@ class Hand
   def card_added?
     @card_added
   end
-  
+
   def cards_shown?
     @cards_shown
   end
@@ -25,32 +25,27 @@ class Hand
 
   def deal_cards(deck)
     @cards = deck.initial_deal
-    count_points(@cards[0])
-    count_points(@cards[1])
+    count_points(@cards.first)
+    count_points(@cards.last)
   end
 
   def take_card(deck)
     @card_added = true
     @cards << deck.add_card
-    count_points(@cards[-1])
+    count_points(@cards.last)
   end
 
   def skip_move
-    puts "Move is passed to another player"
+    puts 'Move is passed to another player'
   end
 
   def open_cards
     @cards_shown = true
     @points = 0
-    @cards.each do |card| 
+    @cards.each do |card|
       count_points(card)
     end
-    p "#{@cards} points: #{@points}" 
-  end
-
-  def check_ace
-    ace_on_hands = @cards & %w(A+ A<> A<3 A^)
-    @points -= 10 if @points > 21 && !ace_on_hands.empty?
+    p "#{@cards} points: #{@points}"
   end
 
   def count_points(card)
@@ -58,7 +53,11 @@ class Hand
     check_ace
   end
 
+  def check_ace
+    @points -= 10 if @points > 21 && @cards.any? { |card| card.value == 11 }
+  end
+
   def hand_full?
-    cards.size == 3
+    @cards.size == 3
   end
 end
