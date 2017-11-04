@@ -7,9 +7,8 @@ class Deck
 
   def shuffle_deck
     deck = []
-    %w[<> <3 ^ +].each do |suit|
-      (2..10).each { |rank| deck << Cards.new(rank, suit) }
-      %w[J Q K A].each { |rank| deck << Cards.new(rank, suit) }
+    Cards::SUITS.each do |suit|
+      Cards::CARDS.each { |rank| deck << Cards.new(rank, suit) }
     end
     deck.shuffle.reverse.shuffle
   end

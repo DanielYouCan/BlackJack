@@ -7,37 +7,44 @@ class UserInterface
     puts "What's your name?"
     player_name = gets.chomp
     @game = Game.new(player_name)
-    new_round
+    game_on
   end
 
-  def game_preset
-    @game.hand_settings
-    @game.deck = Deck.new
-    @game.player.hand.deal_cards(@game.deck)
-    @game.dealer.hand.deal_cards(@game.deck)
+  def game_on
+    @game.hand_preset
     puts "Your cards: #{@game.player.hand.cards} points: #{@game.player.hand.points}"
     puts "Dealer's cards **"
- end
+    game_center
+  end
 
-  def new_round
-    puts 'New round:'
-    game_preset
+  def game_center
     loop do
       options
-      move = gets.chomp
-      read(move)
-      @game.dealer.dealer_move(@game.deck, @game.player) if @game.player.hand.cards_not_shown?
-      if @game.player.hand.cards_shown? && !@game.round_over
-        @game.round_results
-        @game.round_over = true
+      turn = gets.chomp
+      @game.new_round(turn)
+      if @game.player.hand.card_added? && !@game.round_over && @game.dealer.hand.cards_not_shown?
+        puts "Your cards: #{@game.player.hand.cards} points: #{@game.player.hand.points}"
       end
-      break if @game.round_over
+      puts 'Dealer skipped a move' if !@game.dealer.hand.card_added? && !@game.round_over && @game.dealer.hand.cards_not_shown?
+      puts 'Dealer took a card' if @game.dealer.hand.card_added? && !@game.round_over
+      winner if is_over?
+      break if is_over?
     end
+    new_game if @game.game_over
+    game_on
+  end
 
-    if @game.player.bankroll > 0 && @game.dealer.bankroll > 0
-      new_round
-    else
-      new_game
+  def is_over?
+    @game.round_over || (@game.dealer.hand.hand_full? && @game.player.hand.hand_full?)
+  end
+
+  def winner
+    if @game.winner.instance_of?(Player)
+      puts "#{@game.player.name} wins! Money left:#{@game.player.bankroll}"
+    elsif @game.winner.instance_of?(Dealer)
+      puts "Dealer wins! Money left:#{@game.player.bankroll}"
+    elsif @game.winner == :draw
+      puts "It's a draw!"
     end
   end
 
@@ -45,9 +52,8 @@ class UserInterface
     puts 'Do you want to play again? Yes/No'
     answer = gets.chomp
     if answer == 'Yes'
-      @game.player.bankroll = 100
-      @game.dealer.bankroll = 100
-      new_round
+      @game.game_preset
+      game_on
     elsif answer == 'No'
       puts 'Game is over'
     end
@@ -65,33 +71,6 @@ class UserInterface
       1 - add a card
       2 - open cards
       finish - quit game"
-    end
-  end
-
-  def end_round
-    puts "#{@game.player.name}'s results: "
-    @game.player.hand.open_cards
-    puts "Dealer's results: "
-    @game.dealer.hand.open_cards
-    @game.round_results
-    @game.round_over = true
-  end
-
-  def read(move)
-    case move
-    when '0'
-      @game.player.hand.skip_move
-    when '1'
-      if @game.player.hand.card_added?
-        puts 'You can add card only one time'
-      else
-        @game.player.hand.take_card(@game.deck)
-        puts "Your cards: #{@game.player.hand.cards} points: #{@game.player.hand.points}"
-      end
-    when '2'
-      end_round
-    when 'finish'
-      abort 'stop_game'
     end
   end
 end
